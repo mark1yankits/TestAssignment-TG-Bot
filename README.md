@@ -1,68 +1,77 @@
-# Telegram Bot + Cloudflare API
+# 🛡️ Cloudflare Telegram Control Suite
 
-Telegram bot with Cloudflare DNS management, Express API, and React admin panel.
+Потужний інструмент для керування інфраструктурою Cloudflare прямо з Telegram. Проект включає розумного бота, Express-сервер для моніторингу та React-адмін-панель для керування доступом.
 
-## Stack
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=Cloudflare&logoColor=white)
 
-- **Backend:** Node.js, Express, Telegraf, Mongoose, axios
-- **Frontend:** React (Vite), MUI
-- **DB:** MongoDB (Atlas or local)
+---
 
-## Setup
+## 🚀 Основні можливості
 
-### 1. Backend
+### 🤖 Telegram Бот
+- **Обмежений доступ:** Бот реагує лише в конкретному груповому чаті (`ALLOWED_CHAT_ID`).
+- **White-list система:** Лише верифіковані користувачі з бази даних можуть виконувати команди.
+- **Керування доменами:** Реєстрація (додавання) нових зон у Cloudflare.
+- **DNS Менеджер:** Повний цикл (CRUD) роботи з DNS записами (A, CNAME, TXT тощо).
 
-```bash
+### 🖥️ Admin Panel (React)
+- **Авторизація:** Захищений вхід за адмін-паролем.
+- **User Management:** Зручний інтерфейс для додавання/видалення користувачів Telegram у білий список.
+- **Responsive Design:** Побудовано на MUI (Material UI), адаптовано під мобільні пристрої.
+
+### 🌐 Webhook Logging
+- Автоматичне відстеження запитів до API через маршрут `/webhook-log`.
+- Миттєве сповіщення в Telegram про IP-адресу, метод та параметри вхідного запиту.
+
+---
+
+## 🛠️ Технологічний стек
+
+- **Backend:** Node.js, Express, Telegraf (Telegram API), Mongoose (MongoDB ODM).
+- **Frontend:** React, Vite, Axios, Material UI (MUI).
+- **Security:** Case-insensitive username validation, Admin Key header protection, Environment variables isolation.
+
+---
+
+## ⚙️ Налаштування та встановлення
+
+### 1. Підготовка оточення
+Створіть файл `.env` у папці `/backend` за прикладом:
+
+```env
+# Telegram
+TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
+ALLOWED_CHAT_ID=-100123456789
+
+# Database
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/dbname
+
+# Cloudflare
+CLOUDFLARE_API_TOKEN=your_long_token
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+
+# Security & Server
+PORT=3000
+ADMIN_PASSWORD=super_secret_password
+
+# 2. Запуск Backend
 cd backend
-cp .env.example .env
 npm install
 npm start
-```
 
-**Required env (backend):**
-
-| Variable | Description |
-|----------|-------------|
-| `TELEGRAM_BOT_TOKEN` | From [@BotFather](https://t.me/BotFather) |
-| `ALLOWED_CHAT_ID` | Telegram chat ID where the bot is allowed (e.g. from getUpdates) |
-| `MONGO_URI` | MongoDB connection string |
-| `PORT` | Server port (default 3000) |
-| `ADMIN_PASSWORD` | Password for admin panel and API (`x-admin-key` header) |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token (Zone + DNS edit) |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (for adding zones) |
-
-### 2. Frontend (admin panel)
-
-```bash
+# 3. Запуск Frontend
 cd frontend
 npm install
-# Optional: create .env with VITE_API_URL=http://localhost:3000 if API is on different host
 npm run dev
-```
 
-Open http://localhost:5173, log in with `ADMIN_PASSWORD`.
-
-## Features
-
-- **Bot:** Works only in one chat (`ALLOWED_CHAT_ID`). Only users from the allowed list (managed in admin panel) can use commands.
-- **Commands:** `/start`, `/help`, `/add_domain <domain>`, `/dns_list`, `/dns_add`, `/dns_update`, `/dns_delete`.
-- **Express:** `GET/POST /webhook-log` — sends request info (IP, method) to the Telegram chat.
-- **Admin panel:** Login by password; manage allowed users; view and delete DNS records per zone.
-
-## Project structure
-
-```
-backend/
-  config.js           # Env validation and config
-  server.js           # Express + Telegraf entry
-  middleware/         # Auth (requireAdminKey)
-  routes/             # users, zones API
-  services/           # Cloudflare API client
-  bot/                # Telegram middleware + commands
-  models/             # Mongoose (AllowedUser)
-frontend/             # React admin (Vite + MUI)
-```
-
-## License
-
-MIT
+📖 Довідник команд бота
+Команда	Опис
+/start	Перевірка доступу та вітання
+/add_domain <domain>	Додати зону в Cloudflare та отримати NS
+/dns_list <domain>	Показати всі записи та їх ID
+/dns_add <domain> <type> <name> <content>	Створити новий запис
+/dns_update <domain> <id> <content>	Оновити існуючий запис за ID
+/dns_delete <domain> <id>	Видалити запис
