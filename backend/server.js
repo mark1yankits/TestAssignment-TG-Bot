@@ -55,6 +55,15 @@ async function run() {
   app.use(zonesRouter);
 
   const bot = new Telegraf(TELEGRAM_BOT_TOKEN.trim());
+  await bot.telegram.setMyCommands([
+    { command: 'start', description: 'Вітання та перевірка доступу' },
+    { command: 'help', description: 'Список усіх команд' },
+    { command: 'add_domain', description: 'Додати домен у Cloudflare, отримати NS сервери' },
+    { command: 'dns_list', description: 'Список DNS записів для домену' },
+    { command: 'dns_add', description: 'Додати DNS запис' },
+    { command: 'dns_update', description: 'Оновити DNS запис (content)' },
+    { command: 'dns_delete', description: 'Видалити DNS запис' },
+  ]);
 
   app.all('/webhook-log', (req, res) => {
     const msg = `🔔 Запит! IP: ${req.ip} Метод: ${req.method}`;
