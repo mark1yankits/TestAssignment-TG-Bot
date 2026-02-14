@@ -75,3 +75,11 @@ npm run dev
 /dns_add <domain> <type> <name> <content>	Створити новий запис
 /dns_update <domain> <id> <content>	Оновити існуючий запис за ID
 /dns_delete <domain> <id>	Видалити запис
+```
+### 2. Адмін Панель
+<img width="1101" height="994" alt="image" src="https://github.com/user-attachments/assets/fed58901-420e-499b-aaac-dc23ee89f37f" />
+<img width="1097" height="783" alt="image" src="https://github.com/user-attachments/assets/d82b0b0e-5e76-4c1b-99de-8e630efd6342" />
+<img width="1121" height="934" alt="image" src="https://github.com/user-attachments/assets/586f5500-191b-4c27-accc-43a1052a82ba" />
+
+
+
