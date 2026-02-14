@@ -20,6 +20,10 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CircularProgress from '@mui/material/CircularProgress';
+import Logout from '@mui/icons-material/Logout';
+import PersonAdd from '@mui/icons-material/PersonAdd';
+import Cloud from '@mui/icons-material/Cloud';
+import Group from '@mui/icons-material/Group';
 import {
   getUsers,
   addUser,
@@ -30,7 +34,7 @@ import {
 } from './api';
 
 function TabPanel({ children, value, index }) {
-  return value === index ? <Box sx={{ pt: 2 }}>{children}</Box> : null;
+  return value === index ? <Box sx={{ pt: 3 }}>{children}</Box> : null;
 }
 
 export default function Dashboard({ adminKey, onLogout }) {
@@ -153,151 +157,202 @@ export default function Dashboard({ adminKey, onLogout }) {
   };
 
   return (
-    <Box sx={{ p: 3, maxWidth: 900, mx: 'auto' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5">Адмін-панель</Typography>
-        <Button variant="outlined" onClick={onLogout}>
-          Вийти
-        </Button>
-      </Box>
-
-      {message && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMessage('')}>
-          {message}
-        </Alert>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
-      )}
-
-      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label="Користувачі бота" />
-        <Tab label="DNS / Cloudflare" />
-      </Tabs>
-
-      <TabPanel value={tab} index={0}>
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Додати нового користувача
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Paper
+        elevation={0}
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 0,
+          px: 3,
+          py: 2,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 960, mx: 'auto' }}>
+          <Typography variant="h6" fontWeight={700} color="primary.main">
+            Admin Panel
           </Typography>
-          <form onSubmit={handleAdd} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <TextField
-              size="small"
-              placeholder="username (наприклад testerTelegram)"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              sx={{ flex: 1 }}
-            />
-            <Button type="submit" variant="contained" disabled={submitLoading}>
-              {submitLoading ? '...' : 'Додати'}
-            </Button>
-          </form>
-        </Paper>
+          <Button
+            variant="outlined"
+            onClick={onLogout}
+            startIcon={<Logout />}
+            sx={{ borderRadius: 2 }}
+          >
+            Вийти
+          </Button>
+        </Box>
+      </Paper>
 
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Username</TableCell>
-                <TableCell align="right">Дія</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={2}>Завантаження...</TableCell>
+      <Box sx={{ maxWidth: 960, mx: 'auto', p: 3 }}>
+        {message && (
+          <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setMessage('')}>
+            {message}
+          </Alert>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
+
+        <Tabs
+          value={tab}
+          onChange={(_, v) => setTab(v)}
+          sx={{
+            mb: 0,
+            '& .MuiTab-root': { minHeight: 48 },
+            '& .Mui-selected': { color: 'primary.main' },
+            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+          }}
+        >
+          <Tab icon={<Group />} iconPosition="start" label="Користувачі бота" />
+          <Tab icon={<Cloud />} iconPosition="start" label="DNS / Cloudflare" />
+        </Tabs>
+
+        <TabPanel value={tab} index={0}>
+          <Paper sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PersonAdd fontSize="small" /> Додати нового користувача
+            </Typography>
+            <form onSubmit={handleAdd} style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <TextField
+                size="small"
+                placeholder="username (наприклад testerTelegram)"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                sx={{ flex: '1 1 240px', minWidth: 200, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+              <Button type="submit" variant="contained" disabled={submitLoading} sx={{ borderRadius: 2 }}>
+                {submitLoading ? '...' : 'Додати'}
+              </Button>
+            </form>
+          </Paper>
+
+          <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.50' }}>
+                  <TableCell sx={{ fontWeight: 600 }}>Username</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600 }}>Дія</TableCell>
                 </TableRow>
-              ) : users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={2}>Немає користувачів. Додайте першого вище.</TableCell>
-                </TableRow>
-              ) : (
-                users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell>@{u.username}</TableCell>
-                    <TableCell align="right">
-                      <IconButton color="error" onClick={() => handleDelete(u.id)} title="Видалити">
-                        <DeleteOutline />
-                      </IconButton>
+              </TableHead>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
+                      Завантаження...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </TabPanel>
-
-      <TabPanel value={tab} index={1}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Зони Cloudflare та їх DNS записи. Розгорніть зону, щоб переглянути або видалити записи.
-        </Typography>
-        {zonesLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : zones.length === 0 ? (
-          <Paper sx={{ p: 3 }}>
-            <Typography color="text.secondary">
-              Зон немає або Cloudflare API не налаштовано. Додайте домен через бота командою /add_domain.
-            </Typography>
-          </Paper>
-        ) : (
-          zones.map((zone) => (
-            <Accordion
-              key={zone.id}
-              onChange={(_, expanded) => expanded && loadRecordsForZone(zone.id)}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography fontWeight="medium">{zone.name}</Typography>
-              </AccordionSummary>
-              <AccordionDetails>
-                {recordsLoading[zone.id] ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : !zoneRecords[zone.id]?.length ? (
-                  <Typography color="text.secondary">Записів немає.</Typography>
+                ) : users.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} sx={{ py: 4 }} color="text.secondary">
+                      Немає користувачів. Додайте першого вище.
+                    </TableCell>
+                  </TableRow>
                 ) : (
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Тип</TableCell>
-                          <TableCell>Ім'я</TableCell>
-                          <TableCell>Значення</TableCell>
-                          <TableCell align="right">Дія</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {zoneRecords[zone.id].map((r) => (
-                          <TableRow key={r.id}>
-                            <TableCell>{r.type}</TableCell>
-                            <TableCell>{r.name}</TableCell>
-                            <TableCell sx={{ wordBreak: 'break-all' }}>{r.content}</TableCell>
-                            <TableCell align="right">
-                              <IconButton
-                                color="error"
-                                size="small"
-                                onClick={() => handleDeleteRecord(zone.id, r.id)}
-                                title="Видалити запис"
-                              >
-                                <DeleteOutline />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                  users.map((u, i) => (
+                    <TableRow
+                      key={u.id}
+                      sx={{
+                        bgcolor: i % 2 === 0 ? 'transparent' : 'grey.50',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      <TableCell>@{u.username}</TableCell>
+                      <TableCell align="right">
+                        <IconButton color="error" onClick={() => handleDelete(u.id)} title="Видалити" size="small">
+                          <DeleteOutline />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
-              </AccordionDetails>
-            </Accordion>
-          ))
-        )}
-      </TabPanel>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </TabPanel>
+
+        <TabPanel value={tab} index={1}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Зони Cloudflare та їх DNS записи. Розгорніть зону, щоб переглянути або видалити записи.
+          </Typography>
+          {zonesLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : zones.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
+              <Typography color="text.secondary">
+                Зон немає або Cloudflare API не налаштовано. Додайте домен через бота командою /add_domain.
+              </Typography>
+            </Paper>
+          ) : (
+            zones.map((zone) => (
+              <Accordion
+                key={zone.id}
+                onChange={(_, expanded) => expanded && loadRecordsForZone(zone.id)}
+                sx={{
+                  '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 1 },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography fontWeight={600}>{zone.name}</Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ bgcolor: 'grey.50', pt: 2 }}>
+                  {recordsLoading[zone.id] ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                      <CircularProgress size={28} />
+                    </Box>
+                  ) : !zoneRecords[zone.id]?.length ? (
+                    <Typography color="text.secondary">Записів немає.</Typography>
+                  ) : (
+                    <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: 'background.paper' }}>
+                            <TableCell sx={{ fontWeight: 600 }}>Тип</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Ім'я</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>Значення</TableCell>
+                            <TableCell align="right" sx={{ fontWeight: 600 }}>Дія</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {zoneRecords[zone.id].map((r, i) => (
+                            <TableRow
+                              key={r.id}
+                              sx={{
+                                bgcolor: i % 2 === 0 ? 'background.paper' : 'grey.50',
+                                '&:hover': { bgcolor: 'action.hover' },
+                              }}
+                            >
+                              <TableCell>{r.type}</TableCell>
+                              <TableCell>{r.name}</TableCell>
+                              <TableCell sx={{ wordBreak: 'break-all' }}>{r.content}</TableCell>
+                              <TableCell align="right">
+                                <IconButton
+                                  color="error"
+                                  size="small"
+                                  onClick={() => handleDeleteRecord(zone.id, r.id)}
+                                  title="Видалити запис"
+                                >
+                                  <DeleteOutline fontSize="small" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </AccordionDetails>
+              </Accordion>
+            ))
+          )}
+        </TabPanel>
+      </Box>
     </Box>
   );
 }
