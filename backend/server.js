@@ -1,11 +1,13 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const axios = require('axios');
 const { Telegraf } = require('telegraf');
 const mongoose = require('mongoose');
 
 const AllowedUser = require('./models/AllowedUser');
 const usersRouter = require('./routes/users');
+const zonesRouter = require('./routes/zones');
 
 const {
   TELEGRAM_BOT_TOKEN,
@@ -47,8 +49,10 @@ async function run() {
   console.log('MongoDB connected');
 
   const app = express();
+  app.use(cors());
   app.use(express.json());
   app.use(usersRouter);
+  app.use(zonesRouter);
 
   const bot = new Telegraf(TELEGRAM_BOT_TOKEN.trim());
 
@@ -84,8 +88,25 @@ async function run() {
     return next();
   });
 
+  const helpText = `📋 Доступні команди:
+
+/start — вітання
+/help — цей список команд
+
+☁️ Cloudflare:
+/add_domain <domain> — додати домен (зона), отримати NS сервери
+/dns_list <domain> — список DNS записів (показує id для видалення/оновлення)
+/dns_add <domain> <type> <name> <content> — додати запис
+  Приклад: /dns_add example.com A @ 1.2.3.4
+/dns_update <domain> <record_id> <content> — оновити запис (новий content)
+/dns_delete <domain> <record_id> — видалити запис (record_id з /dns_list)`;
+
   bot.start((ctx) => {
-    return ctx.reply(`Вітаю, @${ctx.from.username}! Ви маєте доступ до бота.`);
+    return ctx.reply(`Вітаю, @${ctx.from.username}! Ви маєте доступ до бота.\n\nНапиши /help для списку команд.`);
+  });
+
+  bot.command('help', (ctx) => {
+    return ctx.reply(helpText);
   });
 
   bot.command('add_domain', async (ctx) => {
@@ -169,9 +190,68 @@ async function run() {
       if (!data.success || !data.result) {
         return ctx.reply('Не вдалося отримати список записів.');
       }
-      const lines = data.result.map((r) => `${r.type} ${r.name} → ${r.content}`).slice(0, 30);
+      const lines = data.result.map((r) => `${r.id} | ${r.type} ${r.name} → ${r.content}`).slice(0, 30);
       const text = lines.length ? lines.join('\n') : 'Записів немає.';
-      return ctx.reply(`DNS записи для ${domain}:\n${text}`);
+      return ctx.reply(`DNS записи для ${domain} (id для /dns_delete та /dns_update):\n${text}`);
+    } catch (err) {
+      const msg = err.response && err.response.data && err.response.data.errors && err.response.data.errors[0]
+        ? err.response.data.errors[0].message
+        : (err.message || 'Помилка запиту');
+      return ctx.reply(`Помилка: ${msg}`);
+    }
+  });
+
+  bot.command('dns_update', async (ctx) => {
+    const args = ctx.message.text.split(/\s+/).slice(1);
+    const [domain, recordId, ...contentParts] = args;
+    const content = contentParts.join(' ').trim();
+    if (!domain || !recordId || !content) {
+      return ctx.reply('Використання: /dns_update <domain> <record_id> <content>\nrecord_id — з /dns_list');
+    }
+    if (!cfToken) {
+      return ctx.reply('Cloudflare API не налаштовано.');
+    }
+    try {
+      const zoneId = await getZoneId(domain.trim());
+      if (!zoneId) {
+        return ctx.reply(`Зону ${domain} не знайдено в Cloudflare.`);
+      }
+      const { data } = await cf.patch(`/zones/${zoneId}/dns_records/${recordId.trim()}`, {
+        content: content,
+      });
+      if (!data.success) {
+        const errMsg = (data.errors && data.errors[0] && data.errors[0].message) || 'Помилка API';
+        return ctx.reply(`Помилка: ${errMsg}`);
+      }
+      return ctx.reply(`DNS запис оновлено: ${data.result.type} ${data.result.name} → ${data.result.content}`);
+    } catch (err) {
+      const msg = err.response && err.response.data && err.response.data.errors && err.response.data.errors[0]
+        ? err.response.data.errors[0].message
+        : (err.message || 'Помилка запиту');
+      return ctx.reply(`Помилка: ${msg}`);
+    }
+  });
+
+  bot.command('dns_delete', async (ctx) => {
+    const args = ctx.message.text.split(/\s+/).slice(1);
+    const [domain, recordId] = args;
+    if (!domain || !recordId) {
+      return ctx.reply('Використання: /dns_delete <domain> <record_id>\nrecord_id — з /dns_list');
+    }
+    if (!cfToken) {
+      return ctx.reply('Cloudflare API не налаштовано.');
+    }
+    try {
+      const zoneId = await getZoneId(domain.trim());
+      if (!zoneId) {
+        return ctx.reply(`Зону ${domain} не знайдено в Cloudflare.`);
+      }
+      const { data } = await cf.delete(`/zones/${zoneId}/dns_records/${recordId.trim()}`);
+      if (!data.success) {
+        const errMsg = (data.errors && data.errors[0] && data.errors[0].message) || 'Помилка API';
+        return ctx.reply(`Помилка: ${errMsg}`);
+      }
+      return ctx.reply('DNS запис видалено.');
     } catch (err) {
       const msg = err.response && err.response.data && err.response.data.errors && err.response.data.errors[0]
         ? err.response.data.errors[0].message
